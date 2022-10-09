@@ -1,0 +1,75 @@
+/*
+ * Lab 5.c
+ *
+ * Created: 10/22/2020 9:36:40 PM
+ * Author : kyle0
+ */ 
+
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#define row 4
+#define col 4
+
+void startTimer(void);
+void setPins(void);
+void scanpad(uint8_t d[row][col]);
+void setFreq(uint8_t freq[row][col], int r, int c);
+
+int main(void)
+{
+	uint8_t f[row][col] = {
+		{141, 133, 125, 118},
+		{111, 105, 99, 93},
+		{88, 83, 78, 74},
+		{70, 66, 62, 59}
+	};
+	
+	setPins();
+	while (1)
+	{
+		scanpad(f);
+	}
+}
+
+
+void startTimer()
+{
+	TCCR2A |= (7 << WGM20); // Set mode to fast PWM
+	TCCR2A |= (1<< COM2B1); //Set waveform for output pin PD3
+	TCCR2B |= (3<< CS21);   //Set 256 prescale and start timer
+}
+
+void setPins()
+{
+	DDRD |= (1<<DDD3);
+	DDRB &= 0xF0; //Sets up Pins B 0-3 to be Inputs
+	PORTB |= 0x0F; //Sets pull-up resistors
+	DDRD |= 0xF0; // Sets Pins D 4-7 to be Output
+}
+
+void scanpad(uint8_t d[row][col])
+{
+	int r, c;
+	uint8_t freq = 0;
+	while(freq == 0)
+	{
+		for(r = 0; r <row; r++)
+		{
+			PORTD|= 0xF0;
+			PORTD &= ~(1<< (r+4));
+			for(c = 0; c <col; c++)
+			{
+				if (!(PINB & (1 << c)))
+				{
+					setFreq(d,r,c);
+				}
+			}
+		}
+	}
+}
+void setFreq(uint8_t freq[row][col], int r, int c)
+{
+	startTimer();
+	OCR2A = freq[r][c];
+	OCR2B = OCR2A/2;
+}
