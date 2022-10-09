@@ -1,0 +1,96 @@
+/*
+ * Lab 8 Kyle Hill.c
+ *
+ * Created: 11/20/2020 11:40:57 AM
+ * Author : kyle0
+ */ 
+
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <avr/eeprom.h>
+
+#define F_CPU 16000000UL
+#define ON PORTB |= (1<<5)
+#define OFF PORTB &= ~(1<<5)
+void setPins(void);
+void setInterrupts(void);
+void startTimer0(void);
+void setFreq(uint8_t);
+
+
+int main(void)
+{
+	setPins();
+	setInterrupts();
+	
+	uint8_t n = eeprom_read_byte((uint8_t*)46)%11;
+	setFreq(n);
+	
+	n++;
+	eeprom_update_byte((uint8_t*)46, n);
+	
+	while (1)
+	{
+	}
+}
+
+void setPins()
+{
+	DDRB |= (1<<DDB5); //Set up light
+}
+
+void setInterrupts()
+{
+	TIMSK0 |= (3<<OCIE0A);
+	sei();
+}
+
+void setFreq(uint8_t n)
+{
+	startTimer0();
+	//Have had problems with zero in the past so I am using this to make up for that
+	if (n==0)
+	{
+		TCCR0B &= ~(5<<CS00);
+		OFF;
+	}
+	else if (n==10)
+	{
+		//For some reason having OCR0B = OCR0A gave a very dim light
+		OCR0B = 76;
+	}
+	else
+	{
+		OCR0B = OCR0A*n/10;
+	}	
+}
+
+void startTimer0()
+{
+	TCCR0A |= (1<< WGM01);
+	OCR0A = 77;
+	TCCR0B |= (5<<CS00);
+}
+
+//This turns on LED when Timer 0 reaches OCR0A
+ISR (TIMER0_COMPA_vect)
+{
+	ON;
+}
+
+//This turns off LED when Timer 0 reaches OCR0B
+ISR (TIMER0_COMPB_vect)
+{
+	OFF;
+}
+
+
+
+/* I ran this before running my main code so that I could initialize the EEPROM value
+int main(void)
+{
+    uint8_t initial = 0;
+	
+	eeprom_update_byte((uint8_t*)46, initial);
+}*/
+
