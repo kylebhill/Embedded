@@ -1,0 +1,1 @@
+This is the first embedded code I made in college and it is meant to read out my name and id in morse code using an LED repeatedly.
