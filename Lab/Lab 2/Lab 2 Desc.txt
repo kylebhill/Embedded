@@ -1,0 +1,5 @@
+My code is a program which transmits my red id through serial communication. This program has two components: 
+The first is a function which initializes USART to be ready to transmit 8-bit data with no parity and 1 stop bit. 
+The next function is used to transmit one char at a time. 
+For some reason having the for loop inside this function going through each char while only calling the function once wouldn’t 
+work so I had a for loop in the main function instead which would call the transmit function for each letter in the red id array.
